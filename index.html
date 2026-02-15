@@ -904,15 +904,49 @@ const observer = new IntersectionObserver((entries) => {
 
 document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-function handleSubmit() {
+async function handleSubmit() {
   const input = document.querySelector('.waitlist-input');
+  const btn = document.querySelector('.waitlist-form .btn-primary');
   const email = input.value.trim();
-  if (email && email.includes('@')) {
-    const btn = document.querySelector('.waitlist-form .btn-primary');
+
+  // Basic validation
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    input.style.borderColor = 'var(--coral)';
+    input.setAttribute('placeholder', 'Please enter a valid email');
+    setTimeout(() => {
+      input.style.borderColor = 'rgba(255,255,255,0.15)';
+      input.setAttribute('placeholder', 'your@company.com');
+    }, 2000);
+    return;
+  }
+
+  // Show loading state
+  const originalText = btn.textContent;
+  btn.textContent = 'Submitting...';
+  btn.style.opacity = '0.7';
+  btn.disabled = true;
+
+  try {
+    await fetch('https://script.google.com/macros/s/AKfycbyOuhf7cBnbQDm4YwoFvpelLVslU2dpcWcBzrbHY8lNGYDNiAzOJe1JdGBMszNDoDgB/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    });
+
+    // Success state
     btn.textContent = '✓ You\'re on the list!';
     btn.style.background = 'var(--mint)';
+    btn.style.opacity = '1';
     input.value = '';
     input.disabled = true;
+  } catch (error) {
+    // Error state — revert button so they can retry
+    btn.textContent = originalText;
+    btn.style.opacity = '1';
+    btn.disabled = false;
+    input.style.borderColor = 'var(--coral)';
+    input.setAttribute('placeholder', 'Something went wrong — try again');
   }
 }
 </script>
